@@ -5,6 +5,8 @@ const Joi       = require('joi');
 const multer    = require('multer');
 const path      = require('path');
 const rateLimit = require('express-rate-limit');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const User      = require('../models/User');
 const auth      = require('../middleware/auth');
 
@@ -14,16 +16,27 @@ const loginLimiter = rateLimit({
   message: { msg: 'Too many login attempts, please try again in 15 minutes.' },
 });
 
-const router  = express.Router();
+const router = express.Router();
 
-// ─── Multer ───────────────────────────────────────────────────────────────────
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename:    (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_')),
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: (req, file) => ({
+    folder: 'edunetchain',
+    allowed_formats: ['pdf', 'png', 'jpg', 'jpeg'],
+    resource_type: file.mimetype === 'application/pdf' ? 'raw' : 'image',
+    public_id: Date.now() + '-' + file.originalname.replace(/\s+/g, '_'),
+  }),
+});
+
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['.pdf', '.png', '.jpg', '.jpeg'];
     const ext = path.extname(file.originalname).toLowerCase();
