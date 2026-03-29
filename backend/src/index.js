@@ -56,7 +56,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+app.use('/uploads', express.static(uploadsDir));
 
 // ─── Database ─────────────────────────────────────────────────────────────────
 connectDB();
