@@ -1,9 +1,15 @@
 const { ethers } = require('ethers');
-const path = require('path');
-const fs = require('fs');
 
-const abiPath = path.join(__dirname, '../../../contracts/artifacts/contracts/Verification.sol/Verification.json');
-const abi = JSON.parse(fs.readFileSync(abiPath)).abi;
+const abi = [
+  "function issueCredential(address student, bytes32 dataHash, bytes32 nameHash, bytes32 emailHash, bytes32 degreeHash, bytes32 institutionHash, bytes32 resumeHash) external",
+  "function storeVerification(address user, bytes32 hash) external",
+  "function storePostHash(bytes32 postHash) external",
+  "function getVerifications(address user) external view returns (bytes32[])",
+  "function verifyHash(address user, bytes32 hash) external view returns (bool)",
+  "function verifyPostHash(bytes32 postHash) external view returns (bool)",
+  "function hasCredential(address student) external view returns (bool)",
+  "function getCredential(address student) external view returns (bytes32,bytes32,bytes32,bytes32,bytes32,bytes32,uint256,bool)"
+];
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const RPC_URL = process.env.RPC_URL;
