@@ -62,6 +62,7 @@ export default function AlumniLogin() {
       }
 
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("userId", res.data.user.id);
       localStorage.setItem("role", "alumni");
       localStorage.setItem("user", JSON.stringify(res.data.user));

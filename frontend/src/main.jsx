@@ -29,17 +29,37 @@ function isTokenValid(token) {
 }
 
 function App() {
-  const storedToken = localStorage.getItem("token");
-  if (!isTokenValid(storedToken)) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("user");
-  }
-
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [role,  setRole]  = useState(localStorage.getItem("role"));
 
   useEffect(() => {
+    // Try to refresh token on load if expired
+    const storedToken = localStorage.getItem("token");
+    const storedRefresh = localStorage.getItem("refreshToken");
+    if (!isTokenValid(storedToken) && storedRefresh) {
+      import("./api").then(({ refreshToken }) => {
+        refreshToken(storedRefresh)
+          .then(res => {
+            localStorage.setItem("token", res.data.token);
+            setToken(res.data.token);
+          })
+          .catch(() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("role");
+            localStorage.removeItem("user");
+            setToken(null);
+            setRole(null);
+          });
+      });
+    } else if (!isTokenValid(storedToken) && !storedRefresh) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("user");
+      setToken(null);
+      setRole(null);
+    }
+
     const sync = () => {
       setToken(localStorage.getItem("token"));
       setRole(localStorage.getItem("role"));

@@ -63,7 +63,7 @@ const loginSchema = Joi.object({
 
 // ─── Token Helpers ────────────────────────────────────────────────────────────
 function signAccess(payload) {
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '6h' });
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
 function signRefresh(payload) {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, { expiresIn: '7d' });
