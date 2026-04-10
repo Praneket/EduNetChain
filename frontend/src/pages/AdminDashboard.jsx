@@ -101,14 +101,17 @@ export default function AdminDashboard() {
                 {s.resumePath && (
                   <div className="mt-3">
                     <h4 className="font-medium text-sm text-gray-700 mb-1">Resume:</h4>
-                    <a
-                      href={s.resumePath.startsWith('http') ? s.resumePath : `${import.meta.env.VITE_API || "http://localhost:5000"}/${s.resumePath.replace(/\\/g, "/")}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 underline hover:text-blue-800 text-sm"
+                    <button
+                      onClick={() => {
+                        const url = s.resumePath.startsWith('http')
+                          ? s.resumePath.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                          : `${import.meta.env.VITE_API || 'http://localhost:5000'}/${s.resumePath.replace(/\\/g, '/')}`;
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="text-blue-600 underline hover:text-blue-800 text-sm cursor-pointer"
                     >
                       View Resume
-                    </a>
+                    </button>
                   </div>
                 )}
 
