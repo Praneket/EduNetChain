@@ -101,14 +101,19 @@ export default function AdminDashboard() {
                 {s.resumePath && (
                   <div className="mt-3">
                     <h4 className="font-medium text-sm text-gray-700 mb-1">Resume:</h4>
-                    <a
-                      href={s.resumePath}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 underline hover:text-blue-800 text-sm"
+                    <button
+                      onClick={() => {
+                        const base = import.meta.env.VITE_API || 'http://localhost:5000';
+                        const token = localStorage.getItem('token');
+                        const url = s.resumePath.startsWith('http')
+                          ? `${base}/api/users/file?token=${token}&url=${encodeURIComponent(s.resumePath)}`
+                          : `${base}/${s.resumePath.replace(/\\/g, '/')}`;
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="text-blue-600 underline hover:text-blue-800 text-sm cursor-pointer bg-transparent border-none p-0"
                     >
                       View Resume
-                    </a>
+                    </button>
                   </div>
                 )}
 
@@ -120,7 +125,13 @@ export default function AdminDashboard() {
                       {s.certificates.map((file, i) => (
                         <li key={i}>
                           <a
-                            href={file}
+                            href={(() => {
+                              const base = import.meta.env.VITE_API || 'http://localhost:5000';
+                              const token = localStorage.getItem('token');
+                              return file.startsWith('http')
+                                ? `${base}/api/users/file?token=${token}&url=${encodeURIComponent(file)}`
+                                : `${base}/${file.replace(/\\/g, '/')}`;
+                            })()}
                             target="_blank"
                             rel="noreferrer"
                             className="text-blue-600 underline hover:text-blue-800"
