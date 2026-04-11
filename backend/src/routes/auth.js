@@ -5,8 +5,7 @@ const Joi       = require('joi');
 const multer    = require('multer');
 const path      = require('path');
 const rateLimit = require('express-rate-limit');
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { createClient } = require('@supabase/supabase-js');
 const User      = require('../models/User');
 const auth      = require('../middleware/auth');
 
@@ -18,24 +17,14 @@ const loginLimiter = rateLimit({
 
 const router = express.Router();
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: (req, file) => ({
-    folder: 'edunetchain',
-    allowed_formats: ['pdf', 'png', 'jpg', 'jpeg'],
-    resource_type: file.mimetype === 'application/pdf' ? 'raw' : 'image',
-    public_id: Date.now() + '-' + file.originalname.replace(/\s+/g, '_'),
-  }),
-});
-
+// Use memory storage — files go to Supabase, not disk
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['.pdf', '.png', '.jpg', '.jpeg'];
@@ -43,6 +32,16 @@ const upload = multer({
     allowed.includes(ext) ? cb(null, true) : cb(new Error('Only PDF and images allowed'));
   },
 });
+
+async function uploadToSupabase(file) {
+  const fileName = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
+  const { error } = await supabase.storage
+    .from('edunetchain')
+    .upload(fileName, file.buffer, { contentType: file.mimetype });
+  if (error) throw new Error(error.message);
+  const { data } = supabase.storage.from('edunetchain').getPublicUrl(fileName);
+  return data.publicUrl;
+}
 
 // ─── Validation Schemas ───────────────────────────────────────────────────────
 const registerSchema = Joi.object({
@@ -54,7 +53,7 @@ const registerSchema = Joi.object({
   educationInfo:   Joi.string().optional(),
   professionalInfo:Joi.string().optional(),
   skills:          Joi.string().optional(),
-}).unknown(true); // allow multer fields
+}).unknown(true);
 
 const loginSchema = Joi.object({
   email:    Joi.string().email().required(),
@@ -89,9 +88,13 @@ router.post('/register', loginLimiter, upload.fields([
     if (existing) return res.status(400).json({ msg: 'Email already registered' });
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const certPaths  = req.files?.certificates?.map(f => f.path) || [];
+
+    // Upload files to Supabase
+    const certFiles = req.files?.certificates || [];
+    const certPaths = await Promise.all(certFiles.map(f => uploadToSupabase(f)));
+
     const resumeFile = req.files?.resume?.[0] || null;
-    const resumePath = resumeFile ? resumeFile.path : null;
+    const resumePath = resumeFile ? await uploadToSupabase(resumeFile) : null;
 
     const user = new User({
       name, email, passwordHash,
@@ -131,7 +134,6 @@ router.post('/login', loginLimiter, async (req, res) => {
     const token        = signAccess(payload);
     const refreshToken = signRefresh({ id: user._id });
 
-    // Store refresh token hash
     user.refreshToken = await bcrypt.hash(refreshToken, 8);
     await user.save();
 
@@ -213,7 +215,6 @@ router.put('/profile', auth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
-    // name, email, educationInfo locked after blockchain verification
     if (!user.isVerified) {
       if (name)          user.name          = name.trim();
       if (educationInfo) user.educationInfo = { ...user.educationInfo._doc || user.educationInfo, ...educationInfo };
