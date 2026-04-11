@@ -104,8 +104,9 @@ export default function AdminDashboard() {
                     <button
                       onClick={() => {
                         const base = import.meta.env.VITE_API || 'http://localhost:5000';
+                        const token = localStorage.getItem('token');
                         const url = s.resumePath.startsWith('http')
-                          ? `${base}/api/users/file?url=${encodeURIComponent(s.resumePath)}`
+                          ? `${base}/api/users/file?token=${token}&url=${encodeURIComponent(s.resumePath)}`
                           : `${base}/${s.resumePath.replace(/\\/g, '/')}`;
                         window.open(url, '_blank', 'noopener,noreferrer');
                       }}
@@ -126,7 +127,7 @@ export default function AdminDashboard() {
                           <a
                             href={
                               file.startsWith('http')
-                                ? `${import.meta.env.VITE_API || 'http://localhost:5000'}/api/users/file?url=${encodeURIComponent(file)}`
+                                ? `${import.meta.env.VITE_API || 'http://localhost:5000'}/api/users/file?token=${localStorage.getItem('token')}&url=${encodeURIComponent(file)}`
                                 : `${import.meta.env.VITE_API || 'http://localhost:5000'}/${file.replace(/\\/g, '/')}`
                             }
                             target="_blank"

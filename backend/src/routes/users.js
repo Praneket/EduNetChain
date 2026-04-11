@@ -4,8 +4,12 @@ const auth = require('../middleware/auth');
 const User = require('../models/User');
 const router = express.Router();
 
-// GET /api/users/file?url=... — proxy Cloudinary file to avoid untrusted customer error
-router.get('/file', auth, async (req, res) => {
+// GET /api/users/file?url=&token= — proxy Cloudinary file to avoid untrusted customer error
+router.get('/file', (req, res, next) => {
+  // allow token via query param for direct browser navigation
+  if (req.query.token) req.headers.authorization = `Bearer ${req.query.token}`;
+  next();
+}, auth, async (req, res) => {
   try {
     const { url } = req.query;
     if (!url || !url.startsWith('https://res.cloudinary.com/')) {
