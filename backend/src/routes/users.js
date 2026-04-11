@@ -1,26 +1,40 @@
 const express = require('express');
-const axios = require('axios');
+const cloudinary = require('cloudinary').v2;
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 const router = express.Router();
 
-// GET /api/users/file?url=&token= — proxy Cloudinary file to avoid untrusted customer error
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// GET /api/users/file?url=&token= — generate signed Cloudinary URL and redirect
 router.get('/file', (req, res, next) => {
-  // allow token via query param for direct browser navigation
   if (req.query.token) req.headers.authorization = `Bearer ${req.query.token}`;
   next();
-}, auth, async (req, res) => {
+}, auth, (req, res) => {
   try {
     const { url } = req.query;
     if (!url || !url.startsWith('https://res.cloudinary.com/')) {
       return res.status(400).json({ msg: 'Invalid file URL' });
     }
-    const response = await axios.get(url, { responseType: 'stream' });
-    res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
-    res.setHeader('Content-Disposition', 'inline');
-    response.data.pipe(res);
+    // Extract public_id: everything after /upload/v123/ or /upload/
+    const match = url.match(/\/(?:raw|image|video)\/upload\/(?:v\d+\/)?(.+)$/);
+    if (!match) return res.status(400).json({ msg: 'Cannot parse Cloudinary URL' });
+
+    const publicId = match[1].replace(/\.[^/.]+$/, ''); // strip extension
+    const signedUrl = cloudinary.url(publicId, {
+      resource_type: 'raw',
+      type: 'upload',
+      sign_url: true,
+      expires_at: Math.floor(Date.now() / 1000) + 300, // 5 min expiry
+    });
+    res.redirect(signedUrl);
   } catch (err) {
-    res.status(500).json({ msg: 'Failed to fetch file' });
+    console.error('File proxy error:', err.message);
+    res.status(500).json({ msg: 'Failed to generate file URL' });
   }
 });
 
