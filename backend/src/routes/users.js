@@ -16,15 +16,10 @@ router.get('/file', (req, res, next) => {
     // Supabase URLs are public — redirect directly
     if (url.includes('supabase.co')) return res.redirect(url);
 
-    // Cloudinary — fetch server-side and stream (bypasses browser restriction)
+    // Cloudinary — transform to attachment download URL (bypasses untrusted restriction)
     if (url.startsWith('https://res.cloudinary.com/')) {
-      const response = await axios.get(url, {
-        responseType: 'stream',
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-      });
-      res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
-      res.setHeader('Content-Disposition', 'inline');
-      return response.data.pipe(res);
+      const downloadUrl = url.replace('/raw/upload/', '/raw/upload/fl_attachment/');
+      return res.redirect(downloadUrl);
     }
 
     res.status(400).json({ msg: 'Invalid file URL' });
