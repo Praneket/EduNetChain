@@ -103,9 +103,10 @@ export default function AdminDashboard() {
                     <h4 className="font-medium text-sm text-gray-700 mb-1">Resume:</h4>
                     <button
                       onClick={() => {
+                        const base = import.meta.env.VITE_API || 'http://localhost:5000';
                         const url = s.resumePath.startsWith('http')
-                          ? s.resumePath.replace('/raw/upload/', '/raw/upload/fl_attachment/')
-                          : `${import.meta.env.VITE_API || 'http://localhost:5000'}/${s.resumePath.replace(/\\/g, '/')}`;
+                          ? `${base}/api/users/file?url=${encodeURIComponent(s.resumePath)}`
+                          : `${base}/${s.resumePath.replace(/\\/g, '/')}`;
                         window.open(url, '_blank', 'noopener,noreferrer');
                       }}
                       className="text-blue-600 underline hover:text-blue-800 text-sm cursor-pointer"
@@ -123,7 +124,11 @@ export default function AdminDashboard() {
                       {s.certificates.map((file, i) => (
                         <li key={i}>
                           <a
-                            href={file.startsWith('http') ? file : `${import.meta.env.VITE_API || "http://localhost:5000"}/${file.replace(/\\/g, "/")}`}
+                            href={
+                              file.startsWith('http')
+                                ? `${import.meta.env.VITE_API || 'http://localhost:5000'}/api/users/file?url=${encodeURIComponent(file)}`
+                                : `${import.meta.env.VITE_API || 'http://localhost:5000'}/${file.replace(/\\/g, '/')}`
+                            }
                             target="_blank"
                             rel="noreferrer"
                             className="text-blue-600 underline hover:text-blue-800"
