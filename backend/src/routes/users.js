@@ -33,7 +33,7 @@ router.get('/file', (req, res, next) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select('name email role educationInfo professionalInfo personalInfo skills walletAddress createdAt isVerified');
+      .select('name email role educationInfo professionalInfo personalInfo skills walletAddress createdAt isVerified projects experience certificates resumePath');
     if (!user) return res.status(404).json({ msg: 'User not found' });
     res.json(user);
   } catch (err) {

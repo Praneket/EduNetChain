@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { getUserProfile, canMessageUser } from "../api";
-import { GraduationCap, Briefcase, Phone, Link2, Mail, ArrowLeft, MessageSquare, Shield } from "lucide-react";
+import { GraduationCap, Briefcase, Phone, Link2, Mail, ArrowLeft, MessageSquare, Shield, Code, FileText, ExternalLink } from "lucide-react";
 
 export default function UserProfile() {
   const { id } = useParams();
@@ -157,6 +157,100 @@ export default function UserProfile() {
             <div className="flex flex-wrap gap-2">
               {profile.skills.map(sk => (
                 <span key={sk} className="text-sm px-3 py-1 bg-blue-50 text-[#0a66c2] rounded-full border border-blue-100 font-medium">{sk}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Experience (student) */}
+        {!isAlumni && profile.experience?.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <h2 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <Briefcase className="w-5 h-5 text-[#0a66c2]" /> Experience
+            </h2>
+            <div className="space-y-4">
+              {profile.experience.map((exp, i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-5 h-5 text-[#0a66c2]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{exp.role}</p>
+                    <p className="text-sm text-[#0a66c2]">{exp.company}</p>
+                    {exp.duration && <p className="text-xs text-gray-400 mt-0.5">{exp.duration}</p>}
+                    {exp.description && <p className="text-sm text-gray-600 mt-1">{exp.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Projects (student) */}
+        {!isAlumni && profile.projects?.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <h2 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <Code className="w-5 h-5 text-[#0a66c2]" /> Projects
+            </h2>
+            <div className="space-y-3">
+              {profile.projects.map((proj, i) => (
+                <div key={i} className="border border-gray-100 rounded-lg p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-gray-900">{proj.title}</p>
+                    {proj.link && (
+                      <a href={proj.link} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-[#0a66c2] flex-shrink-0">
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                  {proj.techStack && <p className="text-xs text-[#0a66c2] mt-0.5">{proj.techStack}</p>}
+                  {proj.year && <p className="text-xs text-gray-400">{proj.year}</p>}
+                  {proj.description && <p className="text-sm text-gray-600 mt-1">{proj.description}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Documents (student) */}
+        {!isAlumni && (profile.certificates?.length > 0 || profile.resumePath) && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <h2 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <FileText className="w-5 h-5 text-[#0a66c2]" /> Documents
+            </h2>
+            <div className="space-y-3">
+              {profile.resumePath && (
+                <a
+                  href={profile.resumePath.startsWith('http') ? profile.resumePath : `${import.meta.env.VITE_API || 'http://localhost:5000'}/${profile.resumePath.replace(/\\/g, '/')}`}
+                  target="_blank" rel="noreferrer"
+                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#0a66c2] hover:bg-blue-50 transition group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-[#0a66c2]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">Resume</p>
+                    <p className="text-xs text-gray-400 truncate">{profile.resumePath.split('/').pop()}</p>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-[#0a66c2]" />
+                </a>
+              )}
+              {profile.certificates?.map((cert, i) => (
+                <a
+                  key={i}
+                  href={cert.startsWith('http') ? cert : `${import.meta.env.VITE_API || 'http://localhost:5000'}/${cert.replace(/\\/g, '/')}`}
+                  target="_blank" rel="noreferrer"
+                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#0a66c2] hover:bg-blue-50 transition group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">Certificate {i + 1}</p>
+                    <p className="text-xs text-gray-400 truncate">{cert.split('/').pop()}</p>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-[#0a66c2]" />
+                </a>
               ))}
             </div>
           </div>
