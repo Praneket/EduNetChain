@@ -1,10 +1,19 @@
 const { ethers } = require('ethers');
-const path = require('path');
-const fs   = require('fs');
 
-// Always read ABI from compiled artifact — stays in sync with contract changes
-const artifactPath = path.join(__dirname, '../../../contracts/artifacts/contracts/Verification.sol/Verification.json');
-const abi = JSON.parse(fs.readFileSync(artifactPath, 'utf8')).abi;
+const abi = [
+  'function issueCredential(address student, bytes32 dataHash, bytes32 nameHash, bytes32 emailHash, bytes32 degreeHash, bytes32 institutionHash, bytes32 resumeHash) external',
+  'function storeVerification(address user, bytes32 hash) external',
+  'function getCredential(address student) external view returns (bytes32 dataHash, bytes32 nameHash, bytes32 emailHash, bytes32 degreeHash, bytes32 institutionHash, bytes32 resumeHash, uint256 issuedAt, bool exists)',
+  'function hasCredential(address student) external view returns (bool)',
+  'function getVerifications(address user) external view returns (bytes32[] memory)',
+  'function verifyHash(address user, bytes32 hash) external view returns (bool)',
+  'function storePostHash(bytes32 postHash) external',
+  'function verifyPostHash(bytes32 postHash) external view returns (bool)',
+  'function getOwner() external view returns (address)',
+  'event CredentialIssued(address indexed student, bytes32 dataHash, uint256 timestamp)',
+  'event VerificationStored(address indexed user, bytes32 hash, uint256 timestamp)',
+  'event PostHashStored(bytes32 indexed postHash, uint256 timestamp)'
+];
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const RPC_URL = process.env.RPC_URL;
