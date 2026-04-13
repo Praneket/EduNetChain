@@ -41,6 +41,23 @@ const userSchema = new mongoose.Schema({
   // ── Skills (student / alumni) ──────────────────────────────────────────────
   skills: [{ type: String, trim: true }],
 
+  // ── Projects ───────────────────────────────────────────────────────────────
+  projects: [{
+    title:       String,
+    description: String,
+    techStack:   String,
+    link:        String,
+    year:        String,
+  }],
+
+  // ── Experience ────────────────────────────────────────────────────────────
+  experience: [{
+    company:   String,
+    role:      String,
+    duration:  String,
+    description: String,
+  }],
+
   // ── Documents ─────────────────────────────────────────────────────────────
   certificates: [String],
   resumePath:   String,

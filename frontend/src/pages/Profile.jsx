@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { getMyProfile, updateProfile } from "../api";
-import { Pencil, Save, CheckCircle, GraduationCap, Phone, MapPin, X, Shield } from "lucide-react";
+import { Pencil, Save, CheckCircle, GraduationCap, Phone, MapPin, X, Shield, FileText, ExternalLink, Plus, Briefcase, Code, Trash2 } from "lucide-react";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -12,6 +12,13 @@ export default function Profile() {
   const [saved, setSaved] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", address: "", institution: "", degree: "", year: "", studentId: "" });
 
+  const [projects, setProjects]     = useState([]);
+  const [experience, setExperience] = useState([]);
+  const [editSection, setEditSection] = useState(null); // "projects" | "experience"
+
+  const emptyProject    = { title: '', description: '', techStack: '', link: '', year: '' };
+  const emptyExperience = { company: '', role: '', duration: '', description: '' };
+
   useEffect(() => { fetchProfile(); }, []);
 
   const fetchProfile = async () => {
@@ -19,6 +26,8 @@ export default function Profile() {
       const res = await getMyProfile();
       const u = res.data;
       setProfile(u);
+      setProjects(u.projects || []);
+      setExperience(u.experience || []);
       setForm({
         name: u.name || "",
         phone: u.personalInfo?.phone || "",
@@ -29,6 +38,19 @@ export default function Profile() {
         studentId: u.educationInfo?.studentId || "",
       });
     } catch { navigate("/login"); }
+  };
+
+  const handleSaveSection = async (section) => {
+    setSaving(true);
+    try {
+      await updateProfile(section === 'projects' ? { projects } : { experience });
+      await fetchProfile();
+      setEditSection(null);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Failed to save');
+    } finally { setSaving(false); }
   };
 
   const handleSave = async () => {
@@ -191,6 +213,216 @@ export default function Profile() {
             </div>
           )}
         </div>
+
+        {/* Experience Card */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-gray-900 flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-[#0a66c2]" /> Experience
+            </h2>
+            <div className="flex gap-2">
+              {editSection === 'experience' ? (
+                <>
+                  <button onClick={() => handleSaveSection('experience')} disabled={saving}
+                    className="flex items-center gap-1 px-4 py-1.5 bg-[#0a66c2] text-white text-sm font-semibold rounded-full hover:bg-[#004182] transition disabled:opacity-60">
+                    <Save className="w-3.5 h-3.5" />{saving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button onClick={() => { setEditSection(null); setExperience(profile.experience || []); }}
+                    className="px-3 py-1.5 text-sm text-gray-500 rounded-full hover:bg-gray-100 transition">Cancel</button>
+                </>
+              ) : (
+                <button onClick={() => setEditSection('experience')}
+                  className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-full text-sm text-gray-600 hover:bg-gray-50 transition">
+                  <Plus className="w-3.5 h-3.5" /> Add
+                </button>
+              )}
+            </div>
+          </div>
+
+          {editSection === 'experience' ? (
+            <div className="space-y-4">
+              {experience.map((exp, i) => (
+                <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3 relative">
+                  <button onClick={() => setExperience(experience.filter((_, j) => j !== i))}
+                    className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Company</label>
+                      <input value={exp.company} onChange={e => { const a=[...experience]; a[i]={...a[i],company:e.target.value}; setExperience(a); }} className={inp} placeholder="Company name" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Role</label>
+                      <input value={exp.role} onChange={e => { const a=[...experience]; a[i]={...a[i],role:e.target.value}; setExperience(a); }} className={inp} placeholder="Software Intern" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Duration</label>
+                      <input value={exp.duration} onChange={e => { const a=[...experience]; a[i]={...a[i],duration:e.target.value}; setExperience(a); }} className={inp} placeholder="Jun 2024 – Aug 2024" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Description</label>
+                      <textarea value={exp.description} onChange={e => { const a=[...experience]; a[i]={...a[i],description:e.target.value}; setExperience(a); }} className={`${inp} resize-none`} rows={2} placeholder="What you worked on…" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => setExperience([...experience, { ...emptyExperience }])}
+                className="w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-400 hover:border-[#0a66c2] hover:text-[#0a66c2] transition flex items-center justify-center gap-1">
+                <Plus className="w-4 h-4" /> Add Experience
+              </button>
+            </div>
+          ) : experience.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">No experience added yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {experience.map((exp, i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-5 h-5 text-[#0a66c2]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">{exp.role || '—'}</p>
+                    <p className="text-sm text-[#0a66c2]">{exp.company}</p>
+                    {exp.duration && <p className="text-xs text-gray-400 mt-0.5">{exp.duration}</p>}
+                    {exp.description && <p className="text-sm text-gray-600 mt-1">{exp.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Projects Card */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-gray-900 flex items-center gap-2">
+              <Code className="w-5 h-5 text-[#0a66c2]" /> Projects
+            </h2>
+            <div className="flex gap-2">
+              {editSection === 'projects' ? (
+                <>
+                  <button onClick={() => handleSaveSection('projects')} disabled={saving}
+                    className="flex items-center gap-1 px-4 py-1.5 bg-[#0a66c2] text-white text-sm font-semibold rounded-full hover:bg-[#004182] transition disabled:opacity-60">
+                    <Save className="w-3.5 h-3.5" />{saving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button onClick={() => { setEditSection(null); setProjects(profile.projects || []); }}
+                    className="px-3 py-1.5 text-sm text-gray-500 rounded-full hover:bg-gray-100 transition">Cancel</button>
+                </>
+              ) : (
+                <button onClick={() => setEditSection('projects')}
+                  className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-full text-sm text-gray-600 hover:bg-gray-50 transition">
+                  <Plus className="w-3.5 h-3.5" /> Add
+                </button>
+              )}
+            </div>
+          </div>
+
+          {editSection === 'projects' ? (
+            <div className="space-y-4">
+              {projects.map((proj, i) => (
+                <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3 relative">
+                  <button onClick={() => setProjects(projects.filter((_, j) => j !== i))}
+                    className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Project Title</label>
+                      <input value={proj.title} onChange={e => { const a=[...projects]; a[i]={...a[i],title:e.target.value}; setProjects(a); }} className={inp} placeholder="My Awesome Project" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Tech Stack</label>
+                      <input value={proj.techStack} onChange={e => { const a=[...projects]; a[i]={...a[i],techStack:e.target.value}; setProjects(a); }} className={inp} placeholder="React, Node.js…" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Year</label>
+                      <input value={proj.year} onChange={e => { const a=[...projects]; a[i]={...a[i],year:e.target.value}; setProjects(a); }} className={inp} placeholder="2024" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Description</label>
+                      <textarea value={proj.description} onChange={e => { const a=[...projects]; a[i]={...a[i],description:e.target.value}; setProjects(a); }} className={`${inp} resize-none`} rows={2} placeholder="What this project does…" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Link (GitHub / Live)</label>
+                      <input value={proj.link} onChange={e => { const a=[...projects]; a[i]={...a[i],link:e.target.value}; setProjects(a); }} className={inp} placeholder="https://github.com/…" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => setProjects([...projects, { ...emptyProject }])}
+                className="w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-400 hover:border-[#0a66c2] hover:text-[#0a66c2] transition flex items-center justify-center gap-1">
+                <Plus className="w-4 h-4" /> Add Project
+              </button>
+            </div>
+          ) : projects.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">No projects added yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {projects.map((proj, i) => (
+                <div key={i} className="border border-gray-100 rounded-lg p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-gray-900">{proj.title || '—'}</p>
+                    {proj.link && (
+                      <a href={proj.link} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-[#0a66c2] flex-shrink-0">
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                  {proj.techStack && <p className="text-xs text-[#0a66c2] mt-0.5">{proj.techStack}</p>}
+                  {proj.year && <p className="text-xs text-gray-400">{proj.year}</p>}
+                  {proj.description && <p className="text-sm text-gray-600 mt-1">{proj.description}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Documents Card */}
+        {(profile.certificates?.length > 0 || profile.resumePath) && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h2 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <FileText className="w-5 h-5 text-[#0a66c2]" /> Documents
+            </h2>
+            <div className="space-y-3">
+              {profile.resumePath && (
+                <a
+                  href={profile.resumePath.startsWith('http') ? profile.resumePath : `${import.meta.env.VITE_API || 'http://localhost:5000'}/${profile.resumePath.replace(/\\/g, '/')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#0a66c2] hover:bg-blue-50 transition group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100">
+                    <FileText className="w-5 h-5 text-[#0a66c2]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">Resume</p>
+                    <p className="text-xs text-gray-400 truncate">{profile.resumePath.split('/').pop()}</p>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-[#0a66c2]" />
+                </a>
+              )}
+              {profile.certificates?.map((cert, i) => (
+                <a
+                  key={i}
+                  href={cert.startsWith('http') ? cert : `${import.meta.env.VITE_API || 'http://localhost:5000'}/${cert.replace(/\\/g, '/')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-[#0a66c2] hover:bg-blue-50 transition group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 group-hover:bg-green-100">
+                    <FileText className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">Certificate {i + 1}</p>
+                    <p className="text-xs text-gray-400 truncate">{cert.split('/').pop()}</p>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-[#0a66c2]" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Blockchain Card */}
         {profile.walletAddress && (

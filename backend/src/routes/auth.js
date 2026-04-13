@@ -211,7 +211,7 @@ router.get('/me', auth, async (req, res) => {
 // ─── PUT /profile ─────────────────────────────────────────────────────────────
 router.put('/profile', auth, async (req, res) => {
   try {
-    const { name, personalInfo, educationInfo, professionalInfo, skills } = req.body;
+    const { name, personalInfo, educationInfo, professionalInfo, skills, projects, experience } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
@@ -221,7 +221,9 @@ router.put('/profile', auth, async (req, res) => {
     }
     if (personalInfo)     user.personalInfo    = { ...user.personalInfo._doc || user.personalInfo,    ...personalInfo };
     if (professionalInfo) user.professionalInfo= { ...user.professionalInfo._doc || user.professionalInfo, ...professionalInfo };
-    if (Array.isArray(skills)) user.skills     = skills.map(s => s.trim()).filter(Boolean);
+    if (Array.isArray(skills))     user.skills     = skills.map(s => s.trim()).filter(Boolean);
+    if (Array.isArray(projects))   user.projects   = projects;
+    if (Array.isArray(experience)) user.experience = experience;
 
     await user.save();
     const updated = user.toObject();
