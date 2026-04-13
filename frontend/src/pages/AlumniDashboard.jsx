@@ -68,10 +68,10 @@ export default function AlumniDashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createPost({ ...form, type: postType });
+      const res = await createPost({ ...form, type: postType });
+      setMyPosts(prev => [res.data, ...prev]);
       setShowForm(false);
       setForm(emptyForm);
-      fetchMyPosts();
     } catch (err) {
       alert(err.response?.data?.msg || "Failed to create post");
     }
@@ -100,7 +100,7 @@ export default function AlumniDashboard() {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this post?")) return;
-    try { await deletePost(id); fetchMyPosts(); } catch {}
+    try { await deletePost(id); setMyPosts(prev => prev.filter(p => p._id !== id)); } catch {}
   };
 
   const inputCls = "w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0a66c2] focus:border-transparent bg-white transition";

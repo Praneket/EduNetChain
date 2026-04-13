@@ -228,15 +228,25 @@ export default function Dashboard() {
   const handleApply = async (postId) => {
     try {
       await applyToPost(postId);
+      setPosts(prev => prev.map(p =>
+        p._id === postId
+          ? { ...p, applications: [...(p.applications || []), { _id: 'temp' }] }
+          : p
+      ));
       alert("Application submitted!");
-      fetchPosts(activeTab);
     } catch (err) {
       alert(err.response?.data?.msg || "Failed to apply");
     }
   };
 
   const handleLike = async (postId) => {
-    try { await likePost(postId); fetchPosts(activeTab); } catch {}
+    const userId = localStorage.getItem("userId");
+    setPosts(prev => prev.map(p => {
+      if (p._id !== postId) return p;
+      const liked = p.likes?.includes(userId);
+      return { ...p, likes: liked ? p.likes.filter(id => id !== userId) : [...(p.likes || []), userId] };
+    }));
+    try { await likePost(postId); } catch { fetchPosts(activeTab); }
   };
 
   const loadAllAlumni = async () => {

@@ -29,11 +29,13 @@ export default function AdminDashboard() {
   const handleVerify = async (id) => {
     try {
       await approveStudent(id);
-      setMsg("✅ Student verified successfully");
-      setStudents(students.filter((s) => s._id !== id));
+      setStudents(prev => prev.filter((s) => s._id !== id));
+      setMsg("✅ Student verified and blockchain credential issued");
+      setTimeout(() => setMsg(""), 4000);
     } catch (err) {
       console.error(err);
       setMsg("❌ Error verifying student");
+      setTimeout(() => setMsg(""), 4000);
     }
   };
 
@@ -42,10 +44,13 @@ export default function AdminDashboard() {
     if (!reason) return;
     try {
       await rejectStudent(id, reason);
-      setMsg("🚫 Student rejected successfully");
-      setStudents(students.filter((s) => s._id !== id));
+      setStudents(prev => prev.filter((s) => s._id !== id));
+      setMsg("🚫 Student rejected");
+      setTimeout(() => setMsg(""), 4000);
     } catch (err) {
       console.error(err);
+      setMsg("❌ Error rejecting student");
+      setTimeout(() => setMsg(""), 4000);
     }
   };
 

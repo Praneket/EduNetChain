@@ -30,11 +30,18 @@ export default function Messages() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const bottomRef = useRef(null);
+  const chatContainerRef = useRef(null);
+
+  const scrollToBottom = (force = false) => {
+    if (!chatContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+    if (force || isNearBottom) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     fetchInbox();
     if (role === "student") fetchAlumniList();
-    // Auto-open conversation if navigated from a profile page
     if (location.state?.openUserId) {
       setSelectedUser({
         userId: location.state.openUserId,
@@ -44,12 +51,22 @@ export default function Messages() {
     }
   }, []);
 
+  // Poll for new messages every 5 seconds
   useEffect(() => {
-    if (selectedUser) fetchConversation(selectedUser.userId);
-  }, [selectedUser]);
+    if (!selectedUser) return;
+    fetchConversation(selectedUser.userId);
+    const interval = setInterval(() => fetchConversation(selectedUser.userId), 5000);
+    return () => clearInterval(interval);
+  }, [selectedUser?.userId]);
+
+  // Poll inbox every 10 seconds for new conversations
+  useEffect(() => {
+    const interval = setInterval(fetchInbox, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
@@ -228,7 +245,7 @@ export default function Messages() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-white">
+              <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-white">
                 {loading ? (
                   <div className="flex justify-center py-8">
                     <div className="animate-spin w-6 h-6 border-4 border-[#0a66c2] border-t-transparent rounded-full" />
