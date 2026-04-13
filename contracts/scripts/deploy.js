@@ -3,7 +3,7 @@ import hre from "hardhat";
 async function main() {
   console.log("🚀 Deploying Verification contract...");
 
-  const Verification = await hre.ethers.getContractFactory("contracts/Verification.sol:Verification");
+  const Verification = await hre.ethers.getContractFactory("Verification");
   const verification = await Verification.deploy();
 
   await verification.waitForDeployment();

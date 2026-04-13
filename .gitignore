@@ -1,25 +1,28 @@
-# Dependencies
-node_modules/
-**/node_modules/
-
 # Environment files — NEVER commit these
-backend/.env
-frontend/.env
-contracts/.env
+.env
+.env.*
+!.env.example
 
-# Uploads (user files — too large for git)
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Hardhat artifacts (can be regenerated)
+contracts/artifacts/
+contracts/cache/
+
+# Uploads (user files)
 backend/uploads/*
 !backend/uploads/.gitkeep
 
-# Build output
-frontend/dist/
-contracts/artifacts/
-contracts/cache/
+# OS files
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
 npm-debug.log*
-
-# OS
-.DS_Store
-Thumbs.db

@@ -4,6 +4,9 @@ const User = require('../models/User');
 const Verification = require('../models/Verification');
 const { hashDataKeccak, hashFileKeccak, createWallet } = require('../services/cryptoService');
 const { issueCredential, storeOnChain } = require('../services/chainService');
+
+const ZERO_BYTES32 = '0x' + '0'.repeat(64); // valid bytes32 zero value
+
 const router = express.Router();
 
 // Helper: push in-app notification to a user
@@ -46,7 +49,7 @@ router.post('/approve/:verificationId', auth, isAdmin, async (req, res) => {
     const emailHash       = hashDataKeccak(student.email || '');
     const degreeHash      = hashDataKeccak(student.educationInfo?.degree || '');
     const institutionHash = hashDataKeccak(student.educationInfo?.institution || student.educationInfo?.institute || '');
-    const resumeHash      = student.resumePath ? hashDataKeccak(student.resumePath) : ('0x' + '0'.repeat(64));
+    const resumeHash      = student.resumePath ? hashDataKeccak(student.resumePath) : ZERO_BYTES32;
     console.log('✅ Keccak-256 hash generated:', dataHash);
 
     // 🪪 Step 2: Ensure student wallet exists (create if missing)
@@ -169,7 +172,7 @@ router.put("/verify-student/:id", auth, isAdmin, async (req, res) => {
     const emailHash       = hashDataKeccak(student.email || '');
     const degreeHash      = hashDataKeccak(student.educationInfo?.degree || '');
     const institutionHash = hashDataKeccak(student.educationInfo?.institution || student.educationInfo?.institute || '');
-    const resumeHash      = student.resumePath ? hashDataKeccak(student.resumePath) : ('0x' + '0'.repeat(64));
+    const resumeHash      = student.resumePath ? hashDataKeccak(student.resumePath) : ZERO_BYTES32;
 
     let txHash = 'pending';
     try {
