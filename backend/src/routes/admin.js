@@ -41,7 +41,7 @@ router.post('/create-super-admin', async (req, res) => {
 // ── POST /api/admin/super-admin-login ─────────────────────────────────────────
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
-const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, skip: () => process.env.NODE_ENV !== 'production' });
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: process.env.NODE_ENV === 'production' ? 20 : 1000 });
 
 router.post('/super-admin-login', loginLimiter, async (req, res) => {
   try {

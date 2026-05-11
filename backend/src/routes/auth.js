@@ -12,9 +12,8 @@ const auth      = require('../middleware/auth');
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 20 : 200,
+  max: process.env.NODE_ENV === 'production' ? 20 : 1000,
   message: { msg: 'Too many login attempts, please try again in 15 minutes.' },
-  skip: (req) => process.env.NODE_ENV !== 'production',
 });
 
 const router = express.Router();

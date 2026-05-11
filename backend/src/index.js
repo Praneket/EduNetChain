@@ -41,11 +41,10 @@ app.use(cors({
 // ─── Global Rate Limiter ──────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: process.env.NODE_ENV === 'production' ? 200 : 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { msg: 'Too many requests, please try again later.' },
-  skip: (req) => process.env.NODE_ENV !== 'production',
 });
 
 app.use(globalLimiter);
